@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام الفواتير الكلاسيكي – بحث وترجمة مُصلحان</title>
+    <style>
+        body { margin:0; padding:20px; background:#008080; font-family:'Segoe UI','Tahoma',sans-serif; display:flex; justify-content:center; align-items:flex-start; min-height:100vh; }
+        .app-window { background:#c0c0c0; border:2px solid; border-color:#fff #808080 #808080 #fff; box-shadow:2px 2px 0 #000; padding:5px; width:100%; max-width:1100px; }
+        .title-bar { background:linear-gradient(90deg,#000080,#1084d0); color:#fff; padding:4px 6px; font-weight:bold; display:flex; justify-content:space-between; align-items:center; font-size:14px; margin-bottom:5px; }
+        .window-content { background:#c0c0c0; padding:10px; }
+        fieldset { border:2px solid; border-color:#808080 #fff #fff #808080; background:#c0c0c0; margin-bottom:12px; padding:10px; }
+        legend { font-weight:bold; color:#000; background:#c0c0c0; padding:0 5px; }
+        label { display:inline-block; width:90px; font-size:13px; margin-bottom:5px; vertical-align:middle; }
+        input,textarea,select { font-family:'Tahoma',sans-serif; font-size:13px; border:2px solid; border-color:#808080 #fff #fff #808080; background:#fff; padding:2px 4px; outline:none; vertical-align:middle; }
+        input:focus,textarea:focus,select:focus { border-color:#000; background:#ffffe0; }
+        textarea { resize:vertical; width:calc(100% - 100px); vertical-align:top; }
+        .button { font-family:'Tahoma',sans-serif; font-size:12px; font-weight:bold; padding:4px 12px; background:#c0c0c0; border:2px solid; border-color:#fff #808080 #808080 #fff; cursor:pointer; outline:none; margin:2px; min-width:80px; text-align:center; }
+        .button:active { border-color:#808080 #fff #fff #808080; padding:5px 11px 3px 13px; }
+        .toolbar { margin:10px 0; display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+        .invoice-preview { background:#fff; border:1px solid #000; margin-top:20px; padding:30px 25px; font-family:'Times New Roman','Segoe UI',serif; font-size:14px; color:#000; box-shadow:4px 4px 0 rgba(0,0,0,0.1); direction:rtl; }
+        .invoice-header { display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #000; padding-bottom:10px; margin-bottom:15px; }
+        .company-info { font-size:18px; font-weight:700; }
+        .company-logo { max-width:120px; max-height:80px; margin-bottom:10px; display:block; }
+        .invoice-title { font-size:32px; font-weight:700; letter-spacing:2px; color:#111; font-family:'Times New Roman',serif; }
+        .invoice-meta { text-align:left; font-size:14px; line-height:1.7; }
+        .customer-details { margin:20px 0; display:flex; justify-content:space-between; border-bottom:1px dashed #999; padding-bottom:15px; }
+        .bill-to { font-size:15px; line-height:1.8; }
+        .items-table { width:100%; border-collapse:collapse; margin:20px 0; font-size:13px; }
+        .items-table th { border-top:2px solid #000; border-bottom:2px solid #000; padding:8px 5px; text-align:center; background:#f0f0f0; font-weight:600; }
+        .items-table td { border-bottom:1px solid #aaa; padding:8px 5px; text-align:center; }
+        .items-table td:nth-child(1),.items-table th:nth-child(1) { text-align:right; width:40%; }
+        .totals { display:flex; justify-content:flex-end; margin-top:20px; }
+        .totals-table { width:300px; border-collapse:collapse; font-size:14px; border-top:2px solid #000; }
+        .totals-table td { padding:6px 8px; text-align:center; border-bottom:1px solid #ccc; }
+        .totals-table td:first-child { text-align:right; font-weight:600; }
+        .grand-total { font-size:18px; font-weight:700; border-top:2px solid #000; }
+        .notes { margin-top:25px; font-size:13px; border-top:1px dashed #999; padding-top:10px; white-space:pre-wrap; }
+        .archive-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); display:flex; justify-content:center; align-items:center; z-index:1000; }
+        .archive-window { background:#c0c0c0; border:2px solid; border-color:#fff #808080 #808080 #fff; width:85%; max-width:850px; padding:15px; max-height:75%; overflow-y:auto; }
+        .archive-table { width:100%; border-collapse:collapse; margin:10px 0; font-size:13px; }
+        .archive-table th { border:1px solid #808080; padding:5px; background:#e0e0e0; text-align:center; }
+        .archive-table td { border:1px solid #808080; padding:5px; text-align:center; }
+        .search-bar { margin-bottom:10px; display:flex; gap:5px; align-items:center; }
+        .search-bar input { width:250px; padding:3px 6px; }
+        @media print { body { background:#fff; margin:0; padding:0; display:block; } .app-window,.no-print { display:none!important; } .invoice-preview { display:block!important; box-shadow:none; border:none; margin:0; width:auto; padding:10mm; } }
+        @media screen { .items-table input { width:80px; text-align:center; border:1px solid #999; } .row-delete { font-family:'Tahoma',sans-serif; font-size:11px; padding:2px 8px; background:#c0c0c0; border:2px solid; border-color:#fff #808080 #808080 #fff; cursor:pointer; } .row-delete:active { border-color:#808080 #fff #fff #808080; } .price-input-wrapper { display:inline-flex; align-items:center; gap:2px; } .price-input-wrapper span { font-weight:bold; margin-right:2px; } }
+    </style>
+</head>
+<body>
+<div class="app-window">
+    <div class="title-bar">
+        <span id="titleBarText">📄 نظام الفواتير الاحترافي – الإصدار الكلاسيكي 2000</span>
+        <span>_ □ ×</span>
+    </div>
+    <div class="window-content">
+        <fieldset>
+            <legend id="legendComp">بيانات شركتك</legend>
+            <label id="lblCompName">اسم الشركة:</label><input type="text" id="compName" style="width:300px;"><br>
+            <label id="lblCompAddr">العنوان:</label><input type="text" id="compAddr" style="width:300px;"><br>
+            <label id="lblCompPhone">هاتف:</label><input type="text" id="compPhone" style="width:200px;">
+            <label id="lblCompEmail" style="margin-right:20px;">بريد:</label><input type="email" id="compEmail" style="width:200px;">
+        </fieldset>
+        <fieldset>
+            <legend id="legendCust">بيانات العميل</legend>
+            <label id="lblCustName">اسم العميل:</label><input type="text" id="custName" style="width:300px;"><br>
+            <label id="lblCustAddr">العنوان:</label><input type="text" id="custAddr" style="width:300px;"><br>
+            <label id="lblCustPhone">هاتف:</label><input type="text" id="custPhone" style="width:200px;">
+        </fieldset>
+        <fieldset>
+            <legend id="legendDoc">بيانات المستند</legend>
+            <label id="lblDocNum">رقم المستند:</label><input type="text" id="invNumber" readonly style="width:150px; background:#eee;">
+            <label id="lblDocDate" style="margin-right:20px;">التاريخ:</label><input type="date" id="invDate" style="width:150px;"><br>
+            <label id="lblDueDate">تاريخ الاستحقاق:</label><input type="date" id="dueDate" style="width:150px;">
+            <label id="lblCurrency" style="margin-right:20px;">العملة:</label>
+            <select id="currencySelect" style="width:150px;">
+                <option value="EGP">جنيه مصرى</option>
+                <option value="USD">دولار أمريكى</option>
+                <option value="EUR">يورو</option>
+                <option value="JPY">ين يابانى</option>
+                <option value="RUB">روبل روسى</option>
+                <option value="KWD">دينار كويتى</option>
+                <option value="SAR">ريال سعودى</option>
+            </select><br>
+            <label id="lblTaxRate" style="margin-top:5px;">نسبة الضريبة %:</label><input type="number" id="taxRate" step="0.1" min="0" max="100" value="14" style="width:80px;">
+        </fieldset>
+        <fieldset>
+            <legend id="legendItems">الأصناف</legend>
+            <table class="items-table" id="itemsTable">
+                <thead><tr><th id="thDesc">الوصف</th><th id="thQty">الكمية</th><th id="thUnitPrice">سعر الوحدة</th><th id="thTotal">الإجمالي</th><th></th></tr></thead>
+                <tbody id="itemsBody"></tbody>
+            </table>
+            <button type="button" class="button" id="addRowBtn">➕ أضف صنفاً</button>
+        </fieldset>
+        <fieldset>
+            <legend id="legendNotes">ملاحظات وشروط الدفع</legend>
+            <label id="lblNotes">ملاحظات:</label><textarea id="notes" rows="2"></textarea>
+        </fieldset>
+        <div class="toolbar">
+            <button type="button" class="button" id="newInvoiceBtn">🆕 فاتورة جديدة</button>
+            <button type="button" class="button" id="printPdfBtn">🖨️ طباعة / PDF</button>
+            <button type="button" class="button" id="archiveBtn">📁 أرشيف الفواتير</button>
+            <button type="button" class="button" id="exportJsonBtn">💾 تصدير JSON</button>
+            <button type="button" class="button" id="importJsonBtn">📂 استيراد JSON</button>
+            <input type="file" id="importJsonFileInput" accept=".json" style="display:none;">
+            <button type="button" class="button" id="uploadLogoBtn">🖼️ تحميل لوجو</button>
+            <input type="file" id="logoFileInput" accept="image/*" style="display:none;">
+            <button type="button" class="button" id="langToggleBtn">English</button>
+        </div>
+        <div class="invoice-preview" id="previewContainer">
+            <div class="invoice-header">
+                <div class="company-info">
+                    <img id="prevLogo" class="company-logo" src="" style="display:none;">
+                    <span id="prevCompName"></span><br>
+                    <span style="font-size:14px;font-weight:normal;" id="prevCompAddr"></span><br>
+                    <span style="font-size:14px;font-weight:normal;"><span id="prevPhoneLabel">هاتف:</span> <span id="prevCompPhone"></span></span><br>
+                    <span style="font-size:14px;font-weight:normal;"><span id="prevEmailLabel">بريد:</span> <span id="prevCompEmail"></span></span>
+                </div>
+                <div class="invoice-meta">
+                    <div class="invoice-title" id="invoiceTitleText">فاتورة</div>
+                    <div><span id="prevNumLabel">رقم:</span> <span id="prevInvNumber"></span></div>
+                    <div><span id="prevDateLabel">التاريخ:</span> <span id="prevInvDate"></span></div>
+                    <div><span id="prevDueLabel">تاريخ الاستحقاق:</span> <span id="prevDueDate"></span></div>
+                </div>
+            </div>
+            <div class="customer-details">
+                <div class="bill-to">
+                    <strong id="billToLabel">إلى السيد/</strong><br>
+                    <span id="prevCustName"></span><br>
+                    <span id="prevCustAddr"></span><br>
+                    <span id="prevCustPhone"></span>
+                </div>
+            </div>
+            <table class="items-table">
+                <thead><tr><th id="prevThDesc">الوصف</th><th id="prevThQty">الكمية</th><th id="prevThUnitPrice">سعر الوحدة</th><th id="prevThTotal">الإجمالي</th></tr></thead>
+                <tbody id="prevItemsBody"></tbody>
+            </table>
+            <div class="totals">
+                <table class="totals-table">
+                    <tr><td id="subtotalLabel">المجموع الفرعي</td><td id="prevSubtotal">0.00</td></tr>
+                    <tr><td><span id="taxLabel">الضريبة</span> (<span id="prevTaxRate">0</span>%)</td><td id="prevTaxAmount">0.00</td></tr>
+                    <tr class="grand-total"><td id="totalLabel">الإجمالي الكلي</td><td id="prevTotal">0.00</td></tr>
+                </table>
+            </div>
+            <div class="notes" id="prevNotes"></div>
+        </div>
+    </div>
+</div>
+<div id="archiveOverlay" class="archive-overlay" style="display:none;">
+    <div class="archive-window">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <strong id="archiveTitle">أرشيف الفواتير</strong>
+            <button class="button" id="closeArchiveBtn">× إغلاق</button>
+        </div>
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="ابحث برقم أو اسم العميل...">
+        </div>
+        <table class="archive-table" id="archiveTable">
+            <thead><tr><th id="thArchNum">رقم الفاتورة</th><th id="thArchDate">التاريخ</th><th id="thArchCust">العميل</th><th id="thArchTotal">الإجمالي</th><th>تحميل</th><th>حذف</th></tr></thead>
+            <tbody id="archiveBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+(function(){
+    const DB_NAME='InvoiceSystemDB',STORE='invoices';
+    const COUNTER_KEY='counter',LOGO_KEY='logo',TEMP_KEY='temp';
+
+    const currencies=[
+        {code:'EGP',ar:'جنيه مصرى',en:'Egyptian Pound',sa:'ج.م',se:'EGP',dec:2},
+        {code:'USD',ar:'دولار أمريكى',en:'US Dollar',sa:'$',se:'$',dec:2},
+        {code:'EUR',ar:'يورو',en:'Euro',sa:'€',se:'€',dec:2},
+        {code:'JPY',ar:'ين يابانى',en:'Japanese Yen',sa:'¥',se:'¥',dec:0},
+        {code:'RUB',ar:'روبل روسى',en:'Russian Ruble',sa:'₽',se:'₽',dec:2},
+        {code:'KWD',ar:'دينار كويتى',en:'Kuwaiti Dinar',sa:'د.ك',se:'KWD',dec:3},
+        {code:'SAR',ar:'ريال سعودى',en:'Saudi Riyal',sa:'ر.س',se:'SAR',dec:2}
+    ];
+    let lang='ar',cur='EGP';
+    const trans={
+        ar:{
+            titleBarText:'📄 نظام الفواتير الاحترافي – الإصدار الكلاسيكي 2000',
+            legendComp:'بيانات شركتك',lblCompName:'اسم الشركة:',lblCompAddr:'العنوان:',lblCompPhone:'هاتف:',lblCompEmail:'بريد:',
+            legendCust:'بيانات العميل',lblCustName:'اسم العميل:',lblCustAddr:'العنوان:',lblCustPhone:'هاتف:',
+            legendDoc:'بيانات المستند',lblDocNum:'رقم المستند:',lblDocDate:'التاريخ:',lblDueDate:'تاريخ الاستحقاق:',lblCurrency:'العملة:',lblTaxRate:'نسبة الضريبة %:',
+            legendItems:'الأصناف',thDesc:'الوصف',thQty:'الكمية',thUnitPrice:'سعر الوحدة',thTotal:'الإجمالي',addRowBtn:'➕ أضف صنفاً',
+            legendNotes:'ملاحظات وشروط الدفع',lblNotes:'ملاحظات:',
+            newInvoiceBtn:'🆕 فاتورة جديدة (حفظ وأرشفة)',printPdfBtn:'🖨️ طباعة / PDF',archiveBtn:'📁 أرشيف الفواتير',
+            exportJsonBtn:'💾 تصدير JSON',importJsonBtn:'📂 استيراد JSON',uploadLogoBtn:'🖼️ تحميل لوجو',
+            langToggleBtn:'English',
+            billToLabel:'إلى السيد/',phoneLabel:'هاتف:',emailLabel:'بريد:',
+            prevNumLabel:'رقم:',prevDateLabel:'التاريخ:',prevDueLabel:'تاريخ الاستحقاق:',
+            subtotalLabel:'المجموع الفرعي',taxLabel:'الضريبة',totalLabel:'الإجمالي الكلي',invoiceTitleText:'فاتورة',
+            prevThDesc:'الوصف',prevThQty:'الكمية',prevThUnitPrice:'سعر الوحدة',prevThTotal:'الإجمالي',
+            archiveTitle:'أرشيف الفواتير',closeArchiveBtn:'× إغلاق',
+            searchPlaceholder:'ابحث برقم أو اسم العميل...',
+            thArchNum:'رقم الفاتورة',thArchDate:'التاريخ',thArchCust:'العميل',thArchTotal:'الإجمالي',
+            alertRowRequired:'يجب وجود صف واحد على الأقل.',
+            confirmNew:'حفظ الفاتورة الحالية في الأرشيف وإنشاء فاتورة جديدة؟',
+            confirmDelete:'هل أنت متأكد من حذف هذه الفاتورة؟',
+            importError:'ملف JSON غير صالح.'
+        },
+        en:{
+            titleBarText:'📄 Professional Invoice System - Classic 2000 Edition',
+            legendComp:'Your Company',lblCompName:'Company Name:',lblCompAddr:'Address:',lblCompPhone:'Phone:',lblCompEmail:'Email:',
+            legendCust:'Customer',lblCustName:'Customer Name:',lblCustAddr:'Address:',lblCustPhone:'Phone:',
+            legendDoc:'Document',lblDocNum:'Document No:',lblDocDate:'Date:',lblDueDate:'Due Date:',lblCurrency:'Currency:',lblTaxRate:'Tax Rate %:',
+            legendItems:'Items',thDesc:'Description',thQty:'Qty',thUnitPrice:'Unit Price',thTotal:'Total',addRowBtn:'➕ Add Item',
+            legendNotes:'Notes',lblNotes:'Notes:',
+            newInvoiceBtn:'🆕 New Invoice (Save & Archive)',printPdfBtn:'🖨️ Print / PDF',archiveBtn:'📁 Archive',
+            exportJsonBtn:'💾 Export JSON',importJsonBtn:'📂 Import JSON',uploadLogoBtn:'🖼️ Upload Logo',
+            langToggleBtn:'العربية',
+            billToLabel:'To:',phoneLabel:'Phone:',emailLabel:'Email:',
+            prevNumLabel:'No:',prevDateLabel:'Date:',prevDueLabel:'Due Date:',
+            subtotalLabel:'Subtotal',taxLabel:'Tax',totalLabel:'Grand Total',invoiceTitleText:'Invoice',
+            prevThDesc:'Description',prevThQty:'Qty',prevThUnitPrice:'Unit Price',prevThTotal:'Total',
+            archiveTitle:'Invoice Archive',closeArchiveBtn:'× Close',
+            searchPlaceholder:'Search by number or customer name...',
+            thArchNum:'Invoice No',thArchDate:'Date',thArchCust:'Customer',thArchTotal:'Total',
+            alertRowRequired:'At least one row is required.',
+            confirmNew:'Save current invoice to archive and create new one?',
+            confirmDelete:'Delete this invoice from archive?',
+            importError:'Invalid JSON file.'
+        }
+    };
+    function t(k){return trans[lang]?.[k]||k;}
+    function applyLang(){
+        const ids=['titleBarText','legendComp','lblCompName','lblCompAddr','lblCompPhone','lblCompEmail',
+        'legendCust','lblCustName','lblCustAddr','lblCustPhone','legendDoc','lblDocNum',
+        'lblDocDate','lblDueDate','lblCurrency','lblTaxRate','legendItems','thDesc',
+        'thQty','thUnitPrice','thTotal','addRowBtn','legendNotes','lblNotes',
+        'newInvoiceBtn','printPdfBtn','archiveBtn','exportJsonBtn','importJsonBtn','uploadLogoBtn',
+        'langToggleBtn','billToLabel','prevNumLabel','prevDateLabel','prevDueLabel',
+        'subtotalLabel','taxLabel','totalLabel','invoiceTitleText','prevThDesc','prevThQty','prevThUnitPrice','prevThTotal',
+        'archiveTitle','closeArchiveBtn','thArchNum','thArchDate','thArchCust','thArchTotal'];
+        ids.forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=t(id);});
+        const searchInput=document.getElementById('searchInput');
+        if(searchInput) searchInput.placeholder=t('searchPlaceholder');
+        document.documentElement.dir=lang==='ar'?'rtl':'ltr';
+        updateCurOptions();
+        updatePlaceholders(); // تحديث placeholders الصفوف الحالية
+    }
+    function updatePlaceholders(){
+        // تحديث placeholder لجميع حقول وصف الصنف
+        document.querySelectorAll('.item-desc').forEach(inp=>{ inp.placeholder=t('thDesc'); });
+    }
+    function getCur(code=cur){return currencies.find(c=>c.code===code)||currencies[0];}
+    function sym(){const c=getCur();return lang==='ar'?c.sa:c.se;}
+    function fmt(amount,code=cur){const c=getCur(code);return amount.toFixed(c.dec)+' '+ (lang==='ar'?c.sa:c.se);}
+    function updateCurOptions(){const sel=document.getElementById('currencySelect');for(const o of sel.options){const c=currencies.find(c=>c.code===o.value);if(c)o.textContent=lang==='ar'?c.ar:c.en;}}
+    function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,2);r.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains(STORE))db.createObjectStore(STORE);};r.onsuccess=e=>res(e.target.result);r.onerror=e=>rej(e.target.error);});}
+    async function dbPut(key,val){const db=await openDB();return new Promise((res,rej)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(val,key);tx.oncomplete=res;tx.onerror=rej;});}
+    async function dbGet(key){const db=await openDB();return new Promise(res=>{const tx=db.transaction(STORE,'readonly');const req=tx.objectStore(STORE).get(key);req.onsuccess=()=>res(req.result);req.onerror=()=>res(null);});}
+    async function dbDel(key){const db=await openDB();return new Promise((res,rej)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).delete(key);tx.oncomplete=res;tx.onerror=rej;});}
+    async function getAllInvoices(){
+        const db=await openDB();
+        return new Promise((res,rej)=>{
+            const tx=db.transaction(STORE,'readonly');
+            const invs=[];
+            tx.objectStore(STORE).openCursor().onsuccess=e=>{
+                const c=e.target.result;
+                if(c){
+                    if(typeof c.key==='string' && c.key.startsWith('inv_')) invs.push({key:c.key,data:c.value});
+                    c.continue();
+                } else res(invs);
+            };
+            tx.onerror=rej;
+        });
+    }
+    async function nextNum(){let c=await dbGet(COUNTER_KEY);if(typeof c!=='number')c=1;await dbPut(COUNTER_KEY,c+1);return c;}
+    async function saveLogo(url){await dbPut(LOGO_KEY,url);}
+    async function loadLogo(){return await dbGet(LOGO_KEY);}
+
+    const itemsBody=document.getElementById('itemsBody'),curSel=document.getElementById('currencySelect'),invNumF=document.getElementById('invNumber');
+    const today=new Date().toISOString().split('T')[0];
+    const dueDef=()=>{const d=new Date();d.setDate(d.getDate()+15);return d.toISOString().split('T')[0];};
+
+    function collect(){
+        const its=[];itemsBody.querySelectorAll('tr').forEach(r=>its.push({
+            desc:r.querySelector('.item-desc').value,qty:r.querySelector('.item-qty').value,price:r.querySelector('.item-price').value
+        }));
+        return {compName:document.getElementById('compName').value,compAddr:document.getElementById('compAddr').value,compPhone:document.getElementById('compPhone').value,compEmail:document.getElementById('compEmail').value,
+                custName:document.getElementById('custName').value,custAddr:document.getElementById('custAddr').value,custPhone:document.getElementById('custPhone').value,
+                invNumber:invNumF.value,invDate:document.getElementById('invDate').value,dueDate:document.getElementById('dueDate').value,
+                currency:curSel.value,taxRate:document.getElementById('taxRate').value,notes:document.getElementById('notes').value,items:its};
+    }
+    function fill(d){
+        document.getElementById('compName').value=d.compName||'';document.getElementById('compAddr').value=d.compAddr||'';
+        document.getElementById('compPhone').value=d.compPhone||'';document.getElementById('compEmail').value=d.compEmail||'';
+        document.getElementById('custName').value=d.custName||'';document.getElementById('custAddr').value=d.custAddr||'';
+        document.getElementById('custPhone').value=d.custPhone||'';invNumF.value=d.invNumber||'1';
+        document.getElementById('invDate').value=d.invDate||today;document.getElementById('dueDate').value=d.dueDate||dueDef();
+        document.getElementById('taxRate').value=d.taxRate||'14';document.getElementById('notes').value=d.notes||'';
+        curSel.value=d.currency||'EGP';cur=curSel.value;
+        itemsBody.innerHTML='';
+        if(d.items&&d.items.length)d.items.forEach(i=>itemsBody.appendChild(createRow(i.desc,i.qty,i.price)));
+        else itemsBody.appendChild(createRow('',1,'0.00'));
+    }
+    function createRow(desc='',qty=1,price='0.00'){
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td><input type="text" class="item-desc" value="${esc(desc)}" placeholder="${t('thDesc')}"></td>
+                      <td><input type="number" class="item-qty" value="${qty}" min="1" step="1" style="width:70px;"></td>
+                      <td><div class="price-input-wrapper"><input type="number" class="item-price" value="${price}" min="0" step="0.01" style="width:100px;"><span>${sym()}</span></div></td>
+                      <td class="item-total">0.00</td><td><button type="button" class="row-delete">✕</button></td>`;
+        return tr;
+    }
+    function esc(s){return s.replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+    function escH(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+    function addRow(){itemsBody.appendChild(createRow());updateTotals();saveTemp();updatePreview();}
+    function deleteRow(btn){const tr=btn.closest('tr');if(itemsBody.children.length>1){tr.remove();updateTotals();saveTemp();updatePreview();}else alert(t('alertRowRequired'));}
+    function updateTotals(){
+        let sub=0;itemsBody.querySelectorAll('tr').forEach(r=>{
+            const q=parseFloat(r.querySelector('.item-qty').value)||0,p=parseFloat(r.querySelector('.item-price').value)||0,tot=q*p;
+            r.querySelector('.item-total').textContent=fmt(tot);sub+=tot;
+        });
+        const tax=sub*(parseFloat(document.getElementById('taxRate').value)||0)/100;
+        document.getElementById('prevSubtotal').textContent=fmt(sub);
+        document.getElementById('prevTaxRate').textContent=(parseFloat(document.getElementById('taxRate').value)||0).toFixed(1);
+        document.getElementById('prevTaxAmount').textContent=fmt(tax);
+        document.getElementById('prevTotal').textContent=fmt(sub+tax);
+    }
+    async function updatePreview(){
+        document.getElementById('prevPhoneLabel').textContent=t('phoneLabel');
+        document.getElementById('prevEmailLabel').textContent=t('emailLabel');
+        document.getElementById('prevCompName').textContent=document.getElementById('compName').value;
+        document.getElementById('prevCompAddr').textContent=document.getElementById('compAddr').value;
+        document.getElementById('prevCompPhone').textContent=document.getElementById('compPhone').value;
+        document.getElementById('prevCompEmail').textContent=document.getElementById('compEmail').value;
+        document.getElementById('prevCustName').textContent=document.getElementById('custName').value;
+        document.getElementById('prevCustAddr').textContent=document.getElementById('custAddr').value;
+        document.getElementById('prevCustPhone').textContent=document.getElementById('custPhone').value;
+        document.getElementById('prevInvNumber').textContent=invNumF.value;
+        document.getElementById('prevInvDate').textContent=document.getElementById('invDate').value;
+        document.getElementById('prevDueDate').textContent=document.getElementById('dueDate').value;
+        const prevBody=document.getElementById('prevItemsBody');prevBody.innerHTML='';
+        itemsBody.querySelectorAll('tr').forEach(r=>{
+            const desc=r.querySelector('.item-desc').value,q=r.querySelector('.item-qty').value,
+                  p=parseFloat(r.querySelector('.item-price').value)||0,txt=r.querySelector('.item-total').textContent;
+            const tr=document.createElement('tr');
+            tr.innerHTML=`<td style="text-align:right;">${escH(desc)}</td><td>${q}</td><td>${fmt(p)}</td><td>${txt}</td>`;
+            prevBody.appendChild(tr);
+        });
+        updateTotals();
+        document.getElementById('prevNotes').textContent=document.getElementById('notes').value;
+        const logo=await loadLogo();const img=document.getElementById('prevLogo');
+        if(logo){img.src=logo;img.style.display='block';}else img.style.display='none';
+    }
+    async function saveTemp(){const d=collect();d.lang=lang;await dbPut(TEMP_KEY,d);}
+    async function loadTemp(){
+        const d=await dbGet(TEMP_KEY);
+        if(d){if(d.lang)lang=d.lang;fill(d);}
+        else {invNumF.value='1';await dbPut(COUNTER_KEY,2);itemsBody.appendChild(createRow('منتج مثال',2,'150.00'));
+              document.getElementById('invDate').value=today;document.getElementById('dueDate').value=dueDef();
+              document.getElementById('taxRate').value='14';document.getElementById('notes').value='شكراً لتعاملكم معنا.';
+              document.getElementById('compName').value='المؤسسة العربية للتجارة';document.getElementById('compAddr').value='22 شارع الجمهورية، القاهرة';
+              document.getElementById('compPhone').value='202 12345678+';document.getElementById('compEmail').value='info@arabtrade.com';
+              document.getElementById('custName').value='شركة النور للتوزيع';document.getElementById('custAddr').value='55 ميدان التحرير، القاهرة';
+              document.getElementById('custPhone').value='2010 9876543+';}
+        applyLang();curSel.value=cur;updateCurSym();updateTotals();updatePreview();
+    }
+    function updateCurSym(){document.querySelectorAll('#itemsBody .price-input-wrapper span').forEach(s=>s.textContent=sym());}
+    async function newInvoice(){
+        if(!confirm(t('confirmNew')))return;
+        const d=collect();d.lang=lang;await dbPut('inv_'+d.invNumber,d);
+        invNumF.value=await nextNum();
+        document.getElementById('invDate').value=today;document.getElementById('dueDate').value=dueDef();
+        itemsBody.innerHTML='';itemsBody.appendChild(createRow('',1,'0.00'));
+        await saveTemp();updateTotals();updatePreview();
+    }
+    function printPDF(){window.print();}
+    async function openArchive(){
+        document.getElementById('archiveOverlay').style.display='flex';
+        const invs=await getAllInvoices();
+        document.getElementById('archiveTitle').textContent=t('archiveTitle');
+        document.getElementById('closeArchiveBtn').textContent=t('closeArchiveBtn');
+        document.getElementById('searchInput').placeholder=t('searchPlaceholder');
+        document.getElementById('thArchNum').textContent=t('thArchNum');
+        document.getElementById('thArchDate').textContent=t('thArchDate');
+        document.getElementById('thArchCust').textContent=t('thArchCust');
+        document.getElementById('thArchTotal').textContent=t('thArchTotal');
+        displayArchive(invs);
+    }
+    function displayArchive(invs,filter=''){
+        const tbody=document.getElementById('archiveBody');tbody.innerHTML='';
+        const lowerFilter = filter.toLowerCase();
+        const filtered = invs.filter(i => {
+            if (!filter) return true;
+            const invNum = i.data.invNumber ? String(i.data.invNumber) : '';
+            const custName = i.data.custName ? i.data.custName.toLowerCase() : '';
+            const custPhone = i.data.custPhone ? i.data.custPhone.toLowerCase() : '';
+            const keyNumber = i.key.replace('inv_', '');
+            return invNum.includes(filter) || keyNumber.includes(filter) ||
+                   custName.includes(lowerFilter) || custPhone.includes(lowerFilter);
+        });
+        filtered.sort((a,b)=>b.key.localeCompare(a.key)).forEach(inv=>{
+            const total=inv.data.items.reduce((s,i)=>s+(parseFloat(i.qty)||0)*(parseFloat(i.price)||0),0);
+            const tax=total*(parseFloat(inv.data.taxRate)||0)/100;
+            const tr=document.createElement('tr');
+            tr.innerHTML=`<td>${inv.data.invNumber}</td><td>${inv.data.invDate}</td><td>${inv.data.custName||''}</td><td>${fmt(total+tax,inv.data.currency||'EGP')}</td>
+            <td><button class="button load-inv" data-key="${inv.key}">📂 ${lang==='ar'?'تحميل':'Load'}</button></td>
+            <td><button class="button del-inv" data-key="${inv.key}">🗑️ ${lang==='ar'?'حذف':'Delete'}</button></td>`;
+            tbody.appendChild(tr);
+        });
+        document.querySelectorAll('.load-inv').forEach(b=>b.onclick=async()=>{
+            const key=b.getAttribute('data-key'),d=await dbGet(key);
+            if(d){await saveTemp();fill(d);if(d.lang)lang=d.lang;applyLang();updateCurSym();updateTotals();updatePreview();await saveTemp();
+            document.getElementById('archiveOverlay').style.display='none';}
+        });
+        document.querySelectorAll('.del-inv').forEach(b=>b.onclick=async()=>{
+            if(!confirm(t('confirmDelete')))return;
+            await dbDel(b.getAttribute('data-key'));
+            const currentFilter=document.getElementById('searchInput').value;
+            const updated=await getAllInvoices();
+            displayArchive(updated,currentFilter);
+        });
+    }
+    function closeArchive(){document.getElementById('archiveOverlay').style.display='none';}
+    document.getElementById('searchInput').addEventListener('input',async function(){
+        const invs=await getAllInvoices();
+        displayArchive(invs,this.value);
+    });
+    async function exportJson(){
+        const d=collect();d.lang=lang;
+        const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
+        const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`invoice_${d.invNumber}.json`;a.click();
+    }
+    function importTrigger(){document.getElementById('importJsonFileInput').click();}
+    function handleImport(e){
+        const file=e.target.files[0];if(!file)return;
+        const reader=new FileReader();
+        reader.onload=async(ev)=>{
+            try{const json=JSON.parse(ev.target.result);if(typeof json!=='object')throw new Error();
+                fill(json);if(json.lang)lang=json.lang;applyLang();updateCurSym();updateTotals();updatePreview();await saveTemp();}
+            catch{alert(t('importError'));}
+        };reader.readAsText(file);e.target.value='';
+    }
+    function logoTrigger(){document.getElementById('logoFileInput').click();}
+    async function logoHandle(e){
+        const file=e.target.files[0];if(!file)return;
+        const reader=new FileReader();
+        reader.onload=async(ev)=>{await saveLogo(ev.target.result);await updatePreview();};reader.readAsDataURL(file);
+    }
+
+    document.getElementById('newInvoiceBtn').onclick=newInvoice;
+    document.getElementById('printPdfBtn').onclick=printPDF;
+    document.getElementById('archiveBtn').onclick=openArchive;
+    document.getElementById('closeArchiveBtn').onclick=closeArchive;
+    document.getElementById('exportJsonBtn').onclick=exportJson;
+    document.getElementById('importJsonBtn').onclick=importTrigger;
+    document.getElementById('importJsonFileInput').onchange=handleImport;
+    document.getElementById('uploadLogoBtn').onclick=logoTrigger;
+    document.getElementById('logoFileInput').onchange=logoHandle;
+    document.getElementById('addRowBtn').onclick=addRow;
+    document.getElementById('langToggleBtn').onclick=async()=>{lang=lang==='ar'?'en':'ar';applyLang();updateCurSym();updateTotals();updatePreview();await saveTemp();};
+    itemsBody.addEventListener('click',e=>{if(e.target.classList.contains('row-delete'))deleteRow(e.target);});
+    itemsBody.addEventListener('input',e=>{if(e.target.classList.contains('item-qty')||e.target.classList.contains('item-price')||e.target.classList.contains('item-desc')){updateTotals();saveTemp();updatePreview();}});
+    document.querySelectorAll('input:not(.item-qty,.item-price,.item-desc),textarea').forEach(el=>{el.addEventListener('input',()=>{saveTemp();updatePreview();});});
+    curSel.addEventListener('change',()=>{cur=curSel.value;updateCurSym();updateTotals();saveTemp();updatePreview();});
+    document.getElementById('taxRate').addEventListener('input',()=>{updateTotals();saveTemp();updatePreview();});
+    (async()=>{await loadTemp();applyLang();updateCurSym();updateTotals();updatePreview();})();
+})();
+</script>
+</body>
+</html>
